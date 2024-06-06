@@ -1,10 +1,13 @@
 import numpy as np
 import torch  
 import matplotlib.pyplot as plt
+import matplotlib.image as mpimg
 import torch.nn as nn
 import torch.nn.functional as F
+import matplotlib.pyplot as plt
+import cv2
 
-    
+
 class Convblock(nn.Module):
     expansion = 4
     def __init__(self, inplanes, planes1, planes2, stride=1, dilation=1, padding=1):
@@ -128,4 +131,40 @@ def _2D_unet(n_class=20, gray_scale = True, base=16):
     _2d_unet = _2D_Unet(Convblock, 4, n_class, gray_scale = gray_scale, base = base)
     return _2d_unet
 
+def show_images(images, titles):
+    fig, axes = plt.subplots(1, len(images), figsize=(20, 5))
+    for idx, image in enumerate(images):
+        axes[idx].imshow(image)
+        axes[idx].set_title(titles[idx])
+        axes[idx].axis('off')
+    plt.show()
+
+def ddpm_forward_pass(clean_image, num_steps=1000, beta_start=0.0001, beta_end=0.02):
+    betas = np.linspace(beta_start, beta_end, num_steps)
+    alphas = 1 - betas
+    alphas_cumprod = np.cumprod(alphas)
+    
+    clean_image = clean_image / 255.0
+    clean_image = clean_image[None, :, :, :]
+    x_t = clean_image
+    intermediate_images = []
+
+    for t in range(num_steps):
+        noise = np.random.normal(0, 1, clean_image.shape)
+        alpha_t = alphas_cumprod[t]
+        x_t = np.sqrt(alpha_t) * clean_image + np.sqrt(1 - alpha_t) * noise
+
+        if (t + 1) % 100 == 0:
+            intermediate_images.append(x_t[0])
+
+    return intermediate_images
+
+clean_image = cv2.imread('F16_GT.png')
+noise_image = np.random.normal(0, 1, (256, 256, 3))
+
+intermediate_images = ddpm_forward_pass(clean_image)
+intermediate_images.insert(0, clean_image)
+
+titles = ["Clean Image"] + [f"Step {i*100}" for i in range(1, 11)]
+show_images(intermediate_images, titles)
 
