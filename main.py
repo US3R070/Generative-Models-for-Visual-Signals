@@ -81,7 +81,6 @@ class _2D_Unet(nn.Module):
                 up_part.extend(self.up_stream_block(block, self.base*2**(u+1), self.base*2**(u), self.base*2**(u), int(self.depth)))
         self.up_part = nn.Sequential(*up_part)
         
-    
     def down_stream_block(self, block, inplanes, planes1, planes2, stride=1, dilation=1):
         layers = []
         layers.append(block(inplanes, planes1, planes2, stride=stride, dilation=dilation))
@@ -95,8 +94,6 @@ class _2D_Unet(nn.Module):
         layers.append(upsample)
         layers.append(block(inplanes, planes1, planes2, stride=stride, dilation=dilation))
         return layers
-    
-    
     
     def forward(self, x):
         x = self.initial(x)
@@ -124,7 +121,6 @@ class _2D_Unet(nn.Module):
             x = m(x)
                    
         x = self.classifer(x)
-        
         return x
         
 def _2D_unet(n_class=20, gray_scale = True, base=16):
@@ -139,7 +135,7 @@ def show_images(images, titles):
         axes[idx].axis('off')
     plt.show()
 
-def ddpm_forward_pass(clean_image, num_steps=1000, beta_start=0.0001, beta_end=0.02):
+def ddpm_forward_pass(clean_image, num_steps=1000, beta_start=0.0001, beta_end=0.002):
     betas = np.linspace(beta_start, beta_end, num_steps)
     alphas = 1 - betas
     alphas_cumprod = np.cumprod(alphas)
@@ -167,4 +163,3 @@ intermediate_images.insert(0, clean_image)
 
 titles = ["Clean Image"] + [f"Step {i*100}" for i in range(1, 11)]
 show_images(intermediate_images, titles)
-
